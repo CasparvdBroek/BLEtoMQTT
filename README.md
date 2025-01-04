@@ -9,6 +9,8 @@ Using an Android file manager create a new directory in the user root called 'bl
 
 Go in to Settings->App->BLEtoMQTT and grant location and file privileges
 
+Restart app and on user screen press service start button - a permanent notification should be generated. If no notification is generated then refer to Problems section.
+
 ## setup.json
 ## Privileges
 ## Problems
