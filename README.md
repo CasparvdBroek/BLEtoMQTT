@@ -2,9 +2,14 @@
 ## Introduction
  Android foreground service to provide a bidirectional bridge between BLE devices and an MQTT broker. A Setup.json file defines MQTT parameters and BLE MAC addresses to scan for.
 
- The app has been used on Samsung S9, S9+ and Galaxy Tab A. Running android 10 and 11. 
+ The app has been tried on Samsung S9, S9+ and 'Galaxy Tab A'. Running Android 10 and 11. 
 ## Installation
-## Setup.json
+Clone repository and open in Android IDE. Build apk and install on your device.
+Using an Android file manager create a new directory in the user root called 'ble2mqtt' (/mnt/sdcard/ble2mqtt) in which to place the setup.json file.
+
+Go in to Settings->App->BLEtoMQTT and grant location and file privileges
+
+## setup.json
 ## Privileges
 ## Problems
 The code is lite on error trapping or user warnings. Initial problems are likely due to 
