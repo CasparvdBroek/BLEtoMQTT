@@ -1,6 +1,8 @@
 # BLEtoMQTT
 ## Introduction
- Android foreground service to provide a bidirectional bridge between BLE devices and an MQTT broker. A Setup.json file defines MQTT parameters and BLE MAC addresses to scan for.
+ Android foreground service to provide a bidirectional bridge between BLE devices and an MQTT broker. A setup.json file defines MQTT parameters and BLE MAC addresses to scan for.
+
+For each BLE device detected BLEtoMQTT will discover all exposed services and characteristics creating MQTT topics for each. Those characteristics which are writeable will automatically be 'subscribed' from the MQTT broker.
 
  The app has been tried on Samsung S9, S9+ and 'Galaxy Tab A'. Running Android 10 and 11. 
 ## Installation
