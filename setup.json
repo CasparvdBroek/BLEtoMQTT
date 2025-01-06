@@ -1,0 +1,105 @@
+{
+	"bletomqtt": [{
+		"mqtt": {
+			"IP": "tcp://192.168.192.40:1883",
+			"user": "Guest",
+			"pswd": "0123456789",
+			"clientID": "random_stuff",
+			"LWT_topic": "mango_bletomqtt/availability"
+		}
+	},
+	{
+		"devices": [{
+			"address": "B0:B2:1C:A6:19:BA",
+			"topic": "caravan_monitor",
+			"services": [{
+				"UUID": "f7bdbadd-ffd7-4fd5-82b9-d43f1287f569",
+				"topic": "blink",
+				"characteristics": [{
+					"UUID": "031c00f3-16e1-4d84-8ceb-f7831d4add5e",
+					"topic": "command"
+				},
+				{
+					"UUID": "e76cf003-31fd-4fb3-a0c9-f0b2d90d3f60",
+					"topic": "status"
+				}]
+			},
+			{
+				"UUID": "8cb85c88-afe1-424d-8afd-dbf08f1d178f",
+				"topic": "alarms",
+				"characteristics": [{
+					"UUID": "031c00f3-16e1-4d84-8ceb-f7831d4add5e",
+					"topic": "command",
+					"BitWise": {
+						"H2": "1",
+						"H1": "1",
+						"Manual_Bilge": "1",
+						"Cabin_Light": "1"
+					}
+				},
+				{
+					"UUID": "e76cf003-31fd-4fb3-a0c9-f0b2d90d3f60",
+					"topic": "status",
+					"BitWise": {
+						"Cabin_Light": "1",
+						"Manual_Bilge": "1",
+						"H1": "1",
+						"H2": "1",
+						"bit 5": "1",
+						"bit 4": "1",
+						"bit 3": "1",
+						"bit 2": "1",
+						"Anchor_Drag": "1",
+						"Auto_Bilge": "1"
+					}
+				}]
+			}]
+		},
+		{
+			"address": "40:91:51:FD:BA:76",
+			"topic": "mango_monitor",
+			"services": [{
+				"UUID": "f7bdbadd-ffd7-4fd5-82b9-d43f1287f569",
+				"topic": "blink",
+				"characteristics": [{
+					"UUID": "031c00f3-16e1-4d84-8ceb-f7831d4add5e",
+					"topic": "command"
+				},
+				{
+					"UUID": "e76cf003-31fd-4fb3-a0c9-f0b2d90d3f60",
+					"topic": "status"
+				}]
+			},
+			{
+				"UUID": "8cb85c88-afe1-424d-8afd-dbf08f1d178f",
+				"topic": "alarms",
+				"characteristics": [{
+					"UUID": "031c00f3-16e1-4d84-8ceb-f7831d4add5e",
+					"topic": "command",
+					"BitWise": {
+						"H2": "1",
+						"H1": "1",
+						"Manual_Bilge": "1",
+						"Cabin_Light": "1"
+					}
+				},
+				{
+					"UUID": "e76cf003-31fd-4fb3-a0c9-f0b2d90d3f60",
+					"topic": "status",
+					"BitWise": {
+						"Cabin_Light": "1",
+						"Manual_Bilge": "1",
+						"H1": "1",
+						"H2": "1",
+						"bit 5": "1",
+						"bit 4": "1",
+						"bit 3": "1",
+						"bit 2": "1",
+						"Anchor_Drag": "1",
+						"Auto_Bilge": "1"
+					}
+				}]
+			}]
+		}]
+	}]
+}
