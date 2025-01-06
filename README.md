@@ -7,11 +7,13 @@ For each BLE device detected BLEtoMQTT will discover all exposed services and ch
  The app has been tried on Samsung S9, S9+ and 'Galaxy Tab A'. Running Android 10 and 11. 
 ## Installation
 Clone repository and open in Android IDE. Build apk and install on your device.
-Using an Android file manager create a new directory in the user root called 'ble2mqtt' (/mnt/sdcard/ble2mqtt) in which to place the setup.json file.
+Using an Android file manager create a new directory in the user root called 'bletomqtt' (/mnt/sdcard/bletomqtt) in which to place the setup.json file.
+
+The GitHub repository contains an example setup.json and a prebuilt apk.
 
 Go in to Settings->App->BLEtoMQTT and grant location and file privileges
 
-Restart app and on user screen press service start button - a permanent notification should be generated. If no notification is generated then refer to Problems section.
+Restart app and on user screen press 'service start' button - a permanent notification should be generated. If no notification is generated then refer to Problems section.
 
 ## setup.json
 ## Privileges
