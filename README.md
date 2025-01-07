@@ -5,8 +5,8 @@
 For each BLE device detected BLEtoMQTT will discover all exposed services and characteristics creating MQTT topics for each. Those characteristics which are writeable will automatically be 'subscribed' from the MQTT broker.
 
 Two external libraries are used :
-	- org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5
-	- com.github.weliem:blessed-android
+  - org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5
+  - com.github.weliem:blessed-android
 
 The author uses this application to connect remote custom ESP32 devices to his Home Assistant server via a Zerotier VPN. 
 The GitHub repository contains an example setup.json and a prebuilt apk used to monitor/control a boat on the mooring or at anchor.
@@ -30,3 +30,8 @@ The code is lite on error trapping or user warnings. Initial problems are likely
   - setup.json data structure problems
 
 For further clues view the LogCat 
+[
+  ![Donate with PayPal]
+  (https://raw.githubusercontent.com/stefan-niedermann/paypal-donate-button/master/paypal-donate-button.png)
+]
+(https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QT54MSJR6QU7Y)
