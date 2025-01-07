@@ -43,9 +43,11 @@ Minimum setup.json would just contain mqtt credentials and BLE MAC addresses to 
 		}
 
 
+The example setup.json included in the main directory shows how to convert UUIDs into human friendly MQTT topics. A data template formatter called BITWISE is also shown which can be used to convert integer fields into individual binary sensors and controls.
+
 ## Privileges
 ## Problems
-The code is lite on error trapping or user warnings. Initial problems are likely due to 
+The code is lite on error trapping or user warnings. Initial problems will likely be due to 
   - bluetooth not enabled or location privileges not given
   - internet access not available so cannot find the MQTT broker
   - cannot find the setup.json file or file privileges have not been given
