@@ -23,9 +23,25 @@ Restart app and on user screen press 'service start' button - a permanent notifi
 ## setup.json
 
 Minimum setup.json would just contain mqtt credentials and BLE MAC addresses to scan for :
-##
-		some shit hear
-		and next line
+###
+		{
+			"bletomqtt": [{
+				"mqtt": {
+					"IP": "tcp://192.168.192.40:1883",
+					"user": "Guest",
+					"pswd": "0123456789"
+				}
+			},
+			{
+				"devices": [{
+					"address": "B0:B2:1C:A6:19:BA"
+				},
+				
+					"address": "B5:B2:1C:C6:19:11"
+				}]
+			}]
+		}
+
 
 ## Privileges
 ## Problems
