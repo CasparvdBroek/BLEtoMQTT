@@ -21,6 +21,12 @@ Go in to Settings->App->BLEtoMQTT and grant location and file privileges
 Restart app and on user screen press 'service start' button - a permanent notification should be generated. If no notification is generated then refer to Problems section.
 
 ## setup.json
+
+Minimum setup.json would just contain mqtt credentials and BLE MAC addresses to scan for :
+##
+		some shit hear
+		and next line
+
 ## Privileges
 ## Problems
 The code is lite on error trapping or user warnings. Initial problems are likely due to 
@@ -30,8 +36,5 @@ The code is lite on error trapping or user warnings. Initial problems are likely
   - setup.json data structure problems
 
 For further clues view the LogCat 
-[
-  ![Donate with PayPal]
-  (https://raw.githubusercontent.com/stefan-niedermann/paypal-donate-button/master/paypal-donate-button.png)
-]
-(https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QT54MSJR6QU7Y)
+
+
