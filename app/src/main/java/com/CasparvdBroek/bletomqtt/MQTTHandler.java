@@ -39,13 +39,17 @@ public class MQTTHandler{
         this.context = context;
         try {
             try {
-                clientId = jsonObj.getString("clientID");
+                if(jsonObj.has("clientID")) {
+                    clientId = jsonObj.getString("clientID");
+                }
                 broker = jsonObj.getString("IP");
                 user = jsonObj.getString("user");
                 pswd = jsonObj.getString("pswd");
-                willtopic = jsonObj.getString("LWT_topic");
+                if(jsonObj.has("LWT_topic")) {
+                    willtopic = jsonObj.getString("LWT_topic");
+                }
             }catch(JSONException e){
-
+                Toast.makeText(context,"JSON, "+ e.getMessage(), Toast.LENGTH_LONG).show();
             }
             v3Client = new MqttClient(broker, clientId, null);
             MqttConnectOptions options = new MqttConnectOptions();
@@ -93,7 +97,7 @@ public class MQTTHandler{
             v3Client.connect(options);
 
         } catch (MqttException e) {
-            Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(context,"MQTT, "+ e.getMessage(), Toast.LENGTH_LONG).show();
 
         }
     }

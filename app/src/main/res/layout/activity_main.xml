@@ -11,7 +11,7 @@
         android:layout_width="170dp"
         android:layout_height="46dp"
         android:layout_marginStart="160dp"
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="76dp"
         android:text="Service - START"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

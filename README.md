@@ -9,9 +9,9 @@ Two external libraries are used :
   - com.github.weliem:blessed-android
 
 The author uses this application to connect remote custom ESP32 devices to his Home Assistant server via a Zerotier VPN. 
-The GitHub repository contains an example setup.json and a prebuilt apk used to monitor/control a boat on the mooring or at anchor.
+The GitHub repository contains an example setup.json and a prebuilt apk used to monitor/control a boat on a mooring or at anchor.
 
- The app has been tried on Samsung S9, S9+ and 'Galaxy Tab A'. Running Android 10 and 11. 
+ The app has been tried on Samsung S6, S9, S9+ and 'Galaxy Tab A'. Running Android 7.0, 10 and 11. 
 ## Installation
 Clone repository and open in Android IDE. Build apk and install on your device.
 Using an Android file manager create a new directory in the user root called 'bletomqtt' (/mnt/sdcard/bletomqtt) in which to place the setup.json file.
@@ -43,9 +43,28 @@ Minimum setup.json would just contain mqtt credentials and BLE MAC addresses to 
 		}
 
 
-The example setup.json included in the main directory shows how to convert UUIDs into human friendly MQTT topics. A data template formatter called BITWISE is also shown which can be used to convert integer fields into individual binary sensors and controls.
+The example setup.json included in the main directory shows how to convert UUIDs into human friendly MQTT topics. A data template formatter, called BITWISE, is also shown which can be used to convert integer (ASCII) fields into json with individual binary sensors and controls.
 
-## Privileges
+## BLE Pairing/Bonding
+
+The code makes no special allowances for bonding to the BLE device, this is taken care of in the BLESSED library. If a device requires a passkey to BOND then a user interface screen is presented. The bonding memory is lost if the application is stopped or the Android device is rebooted.
+
+On occasion I have noticed that a bonded BLE device needs to be power cycled to be seen by a new Android device. 
+
+## Permissions
+
+    RECEIVE_BOOT_COMPLETED
+    POST_NOTIFICATIONS
+    SYSTEM_ALERT_WINDOW
+    READ_EXTERNAL_STORAGE
+    MANAGE_EXTERNAL_STORAGE
+    ACTION_MANAGE_OVERLAY_PERMISSION
+    INTERNET
+    ACCESS_COARSE_LOCATION
+    ACCESS_FINE_LOCATION
+    FOREGROUND_SERVICE
+    FOREGROUND_SERVICE_LOCATION
+
 ## Problems
 The code is lite on error trapping or user warnings. Initial problems will likely be due to 
   - bluetooth not enabled or location privileges not given
