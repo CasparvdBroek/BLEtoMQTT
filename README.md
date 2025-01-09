@@ -74,4 +74,12 @@ The code is lite on error trapping or user warnings. Initial problems will likel
 
 For further clues view the LogCat 
 
+## Feel Good
+
+If you find that information and/or software you obtained here is of use to you - please show some appreciation by making a contribution via :
+
+| Paypal | Bitcoin |
+| ------ | ------- |
+| [![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/ncp/payment/9BSAN369THJBA) | <center> [![](https://api.qrserver.com/v1/create-qr-code/?color=000000&bgcolor=FFFFFF&data=bitcoin%3A1GdXrcWKAnSoYb8tRLWF5xtMsrM9HkFBHk&qzone=1&margin=0&size=200x200&ecc=L)](bitcoin:1GdXrcWKAnSoYb8tRLWF5xtMsrM9HkFBHk)<br />[1GdXrcWKAnSoYb8tRLWF5xtMsrM9HkFBHk](bitcoin:1GdXrcWKAnSoYb8tRLWF5xtMsrM9HkFBHk)</center> |
+
 
