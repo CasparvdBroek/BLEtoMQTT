@@ -56,23 +56,23 @@ public class MQTTHandler{
             options.setUserName(user);
             options.setPassword(pswd.toCharArray());
             options.setConnectionTimeout(0);
+            options.setCleanSession(false);
             options.setWill(willtopic,"OFFLINE".getBytes(),0,true);
             options.setAutomaticReconnect(true);
+            options.setKeepAliveInterval(300); //Default value 60 seconds
             options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
             v3Client.setCallback(new MqttCallbackExtended(){
                 @Override
                 public void connectComplete(boolean reconnect, String serverURI) {
 
-                    handler.post(new Runnable() {
+                    handler.postDelayed(new Runnable() {
                                      @Override
                                      public void run() {
                                          Publish(willtopic, "ONLINE");
                                      }
                                  }
-                    );
-
+                    ,1000);
                 }
-
                 @Override
                 public void connectionLost(Throwable cause) {}
 
