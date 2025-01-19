@@ -57,7 +57,7 @@ public class MQTTHandler{
             options.setPassword(pswd.toCharArray());
             options.setConnectionTimeout(0);
             options.setCleanSession(false);
-            options.setWill(willtopic,"OFFLINE".getBytes(),0,true);
+            options.setWill(willtopic,"OFFLINE".getBytes(),1,true);
             options.setAutomaticReconnect(true);
             options.setKeepAliveInterval(300); //Default value 60 seconds
             options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
@@ -68,7 +68,7 @@ public class MQTTHandler{
                     handler.postDelayed(new Runnable() {
                                      @Override
                                      public void run() {
-                                         Publish(willtopic, "ONLINE");
+                                         Publish(willtopic, "ONLINE", true);
                                      }
                                  }
                     ,1000);
@@ -102,9 +102,11 @@ public class MQTTHandler{
         }
     }
 
-    public static void Publish(String topic, String msg){
+    public static void Publish(String topic, String msg, boolean retain){
         MqttMessage message = new MqttMessage( msg.getBytes());
-        message.setQos(0);
+        message.setQos(1);
+        message.setRetained(retain);
+
         try {
             if (v3Client.isConnected()) {
                 v3Client.setTimeToWait(5);

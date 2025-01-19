@@ -380,7 +380,7 @@ public class BLEtoMqttService extends Service {
     public void mqttPublish(String MACAddress , UUID ServiceUUID, UUID CharacteristicUUID ,byte[] value){
         String[] splitString = Raw2Friendly( MACAddress, ServiceUUID, CharacteristicUUID,value);
         if (lstart) {
-            MQTTHandler.Publish(splitString[0], splitString[1]);
+            MQTTHandler.Publish(splitString[0], splitString[1], false);
         }
     };
 
@@ -397,7 +397,7 @@ public class BLEtoMqttService extends Service {
         String[] splitString = Raw2Friendly( MACAddress, ServiceUUID, CharacteristicUUID,noValue);
         if (lstart) {
             try {
-                MQTTHandler.Subscribe(splitString[0], 0);
+                MQTTHandler.Subscribe(splitString[0], 1);
             } catch (MqttException e) {
 
             }
