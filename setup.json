@@ -11,6 +11,7 @@
 	{
 		"devices": [{
 			"address": "B0:B2:1C:A6:19:BA",
+			"passkey": "123456",
 			"topic": "caravan_monitor",
 			"services": [{
 				"UUID": "f7bdbadd-ffd7-4fd5-82b9-d43f1287f569",

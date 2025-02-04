@@ -40,6 +40,7 @@ public class BluetoothHandler {
     private BLEtoMqttService context;
     private final Handler handler = new Handler(Looper.getMainLooper());
     public List<String> MACAddressesList = new ArrayList<String>();
+    public List<String> passKeyList = new ArrayList<String>();
 
     public static BluetoothHandler getInstance(BLEtoMqttService context, JSONArray bleJsonArr)  {   //Makes it a singleton class
         if (instance == null) {
@@ -49,7 +50,7 @@ public class BluetoothHandler {
     }
     private BluetoothHandler(BLEtoMqttService context, JSONArray bleJsonArr) {
         JSONObject jsonDevice;
-
+        String passKey;
         this.context = context;
         // Scan for peripherals with a certain service UUIDs
 
@@ -57,6 +58,11 @@ public class BluetoothHandler {
             for (int i = 0; i < bleJsonArr.length(); i++) {
                 jsonDevice = bleJsonArr.getJSONObject(i);
                 MACAddressesList.add(jsonDevice.getString("address"));
+                passKey = "";
+                if(jsonDevice.has("passkey")) {
+                    passKey = jsonDevice.getString("passkey");
+                }
+                passKeyList.add(passKey);
             }
         }catch(JSONException e){
 
@@ -67,13 +73,19 @@ public class BluetoothHandler {
         private static final String TAG = "BluetoothCentralManagerCallback";
         @Override
         public void onConnectedPeripheral(@NotNull BluetoothPeripheral peripheral) {
+            int index;
+            String passKey;
+            index =MACAddressesList.indexOf(peripheral.getAddress());
+            passKey = passKeyList.get(index);
+            if(passKey != "") {
+                central.setPinCodeForPeripheral(peripheral.getAddress(), passKey);
+            }
             //Have connected so re enable scanning for more
             central.startPairingPopupHack();    //Skipped if samsung device
             startScan(MACAddressesList.toArray(new String[0]));    //Scan for more devices
 
         }
         public void onConnectingPeripheral(@NotNull BluetoothPeripheral peripheral) {
-
         }
         @Override
         public void onConnectionFailed(@NotNull BluetoothPeripheral peripheral, final @NotNull HciStatus status) {
