@@ -47,7 +47,7 @@ The example setup.json included in the main directory shows how to convert UUIDs
 
 ## BLE Pairing/Bonding
 
-The code makes no special allowances for bonding to the BLE device, this is taken care of in the BLESSED library. If a device requires a passkey to BOND then a user interface screen is presented. The bonding memory is lost if the application is stopped or the Android device is rebooted.
+The code allows for bonding to a BLE device by including an option to store a passkey with each device definition in the setup.json file. If a device requires a passkey to BOND, and it is not included in the setup.json, then a user interface screen is presented. 
 
 On occasion I have noticed that a bonded BLE device needs to be power cycled to be seen by a new Android device. 
 
@@ -70,7 +70,7 @@ The code is lite on error trapping or user warnings. Initial problems will likel
   - bluetooth not enabled or location privileges not given
   - internet access not available so cannot find the MQTT broker
   - cannot find the setup.json file or file privileges have not been given
-  - setup.json data structure problems
+  - setup.json data format problems
 
 For further clues view the LogCat 
 
