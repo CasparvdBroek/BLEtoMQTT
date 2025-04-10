@@ -10,8 +10,8 @@ android {
         applicationId = "com.CasparvdBroek.bletomqtt"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.02"
+        versionCode = 2
+        versionName = "1.02.01"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
