@@ -15,6 +15,7 @@ The GitHub repository contains an example setup.json and a prebuilt apk used to 
 ## Installation
 Clone repository and open in Android IDE. Build apk and install on your device.
 Using an Android file manager create a new directory in the user root called 'bletomqtt' (/mnt/sdcard/bletomqtt) in which to place the setup.json file.
+WARNING This is the phones internal SDCard (memory).
 
 Go in to Settings->App->BLEtoMQTT and grant location and file privileges
 
@@ -53,17 +54,17 @@ On occasion I have noticed that a bonded BLE device needs to be power cycled to 
 
 ## Permissions
 
-    RECEIVE_BOOT_COMPLETED
-    POST_NOTIFICATIONS
-    SYSTEM_ALERT_WINDOW
-    READ_EXTERNAL_STORAGE
-    MANAGE_EXTERNAL_STORAGE
-    ACTION_MANAGE_OVERLAY_PERMISSION
-    INTERNET
-    ACCESS_COARSE_LOCATION
-    ACCESS_FINE_LOCATION
-    FOREGROUND_SERVICE
-    FOREGROUND_SERVICE_LOCATION
+    RECEIVE_BOOT_COMPLETED - allows app to auto start on boot after initial manual start.
+    POST_NOTIFICATIONS - warn user the app is running
+    SYSTEM_ALERT_WINDOW - why ?
+    READ_EXTERNAL_STORAGE - gives access to the SETUP.json file
+    MANAGE_EXTERNAL_STORAGE - why ?
+    ACTION_MANAGE_OVERLAY_PERMISSION - why ?
+    INTERNET - access MQTT broker
+    ACCESS_COARSE_LOCATION - required for bluetooth
+    ACCESS_FINE_LOCATION - required for bluetooth
+    FOREGROUND_SERVICE - give priority as a service
+    FOREGROUND_SERVICE_LOCATION - why ?
 
 ## Problems
 The code is lite on error trapping or user warnings. Initial problems will likely be due to 
