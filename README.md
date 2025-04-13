@@ -12,7 +12,7 @@ The author uses this application to connect remote custom ESP32 devices to his H
 The GitHub repository contains an example setup.json and a prebuilt apk used to monitor/control a boat on a mooring or at anchor.
 
  The app has been tried on Samsung S6, S9, S9+ and 'Galaxy Tab A'. Running Android 7.0, 10 and 11. Android 12 and later devices 
- are not currently support - will require user interaction to grant bluetooth permissions.
+ are not currently supported - will require user interaction to grant bluetooth permissions.
 
 ## Installation
 Clone repository and open in Android IDE. Build apk and install on your device.
