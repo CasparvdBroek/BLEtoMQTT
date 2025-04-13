@@ -36,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-
     public void startBLEtoMqttService() {
         Intent startIntent = new Intent(this, BLEtoMqttService.class);
         startIntent.setAction("STARTFOREGROUND");
