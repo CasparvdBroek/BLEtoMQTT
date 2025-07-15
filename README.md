@@ -9,19 +9,17 @@ Two external libraries are used :
   - com.github.weliem:blessed-android
 
 The author uses this application to connect remote custom ESP32 devices to his Home Assistant server via a Zerotier VPN. 
-The GitHub repository contains an example setup.json and a prebuilt apk used to monitor/control a boat on a mooring or at anchor.
+The GitHub repository contains an example setup.json to monitor/control a boat on a mooring or at anchor.
 
- The app has been tried on Samsung S6, S9, S9+ and 'Galaxy Tab A'. Running Android 7.0, 10 and 11. Android 12 and later devices 
- are not currently supported - will require user interaction to grant bluetooth permissions.
+ The app has been tried on Samsung S6, S9, S9+ and 'Galaxy Tab A'. Running Android 7.0, 10 and 11. 
 
 ## Installation
-Clone repository and open in Android IDE. Build apk and install on your device.
+Install latest release version.
+
 Using an Android file manager create a new directory in the user root called 'bletomqtt' (/mnt/sdcard/bletomqtt) in which to place the setup.json file.
 WARNING This is the phones internal SDCard (memory).
 
-Go in to Settings->App->BLEtoMQTT and grant location and file privileges, and also make sure bluetooth is enabled.
-
-Restart app and on user screen press 'service start' button - a permanent notification should be generated. If no notification is generated then refer to Problems section.
+Restart app and on user screen press 'service start' button once all persmissions have been granted - a permanent notification should be generated. If no notification is generated then refer to Problems section.
 
 ## setup.json
 
