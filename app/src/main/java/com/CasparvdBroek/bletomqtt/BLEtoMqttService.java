@@ -8,6 +8,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -31,7 +32,7 @@ public class BLEtoMqttService extends Service {
 
     public  final String CHANNEL_ID = "BLEtoMqttServiceChannel";
 
-    boolean lstart = false;      //Used to stop function if MainActivity app still running.
+    boolean isCleaningUp = false; // Flag to prevent multiple cleanup calls
     JSONObject jsonObj ;
     JSONArray jsonArray ;
     JSONObject mqttJsonObj ;
@@ -40,69 +41,161 @@ public class BLEtoMqttService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        try {
-            jsonObj = new JSONObject(readFileFromSDCard());
-            jsonArray = jsonObj.getJSONArray("bletomqtt");
-            for (int i = 0; i < jsonArray.length(); i++) {
-                if (jsonArray.getJSONObject(i).has("mqtt")) {
-                    mqttJsonObj = jsonArray.getJSONObject(i).getJSONObject("mqtt");
-                }
-                if (jsonArray.getJSONObject(i).has("devices")) {
-                    bleJsonArr = jsonArray.getJSONObject(1).getJSONArray("devices");
-                }
-            }
-
-        } catch (Exception e) {
-        }
-
-//Starts the Bluetooth scanning, callbacks run in UI thread (ie main)
-        BluetoothHandler.getInstance(this,bleJsonArr);
-
-        MQTTHandler.getInstance(this,mqttJsonObj);     // connects with broker
+        // No longer start Bluetooth or MQTT here
+        // All logic moved to onStartCommand
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-        String input;
-
-        lstart = false;
-        if (  intent.getAction().equals("RESTARTFOREGROUND")) {
-            input = "restart";
-            lstart = true;
-        } else{
-            input = intent.getStringExtra("inputExtra");
-            if (intent.getAction().equals("STARTFOREGROUND")) {
-                lstart = true;
+        String input = "";
+        if (intent != null) {
+            if (intent.getAction() != null && intent.getAction().equals("RESTARTFOREGROUND")) {
+                input = "restart";
+            } else {
+                input = intent.getStringExtra("inputExtra");
             }
         }
 
-        if (lstart) {
-            createNotificationChannel();
-            Intent notificationIntent = new Intent(this, MainActivity.class);
-            PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                    0, notificationIntent, PendingIntent.FLAG_MUTABLE);     //FLAG_ added 20241212
-            Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setContentTitle("BLEtoMqtt Bridge")
-                    .setContentText(input)
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentIntent(pendingIntent)
-                    .build();
-            startForeground(1, notification);
+        // Only start service if user requested (STARTFOREGROUND)
+        if (intent != null && intent.getAction() != null &&
+                (intent.getAction().equals("STARTFOREGROUND") || intent.getAction().equals("RESTARTFOREGROUND"))) {
+            // Parse config
+            try {
+                jsonObj = new JSONObject(readFileFromSDCard());
+                jsonArray = jsonObj.getJSONArray("bletomqtt");
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    if (jsonArray.getJSONObject(i).has("mqtt")) {
+                        mqttJsonObj = jsonArray.getJSONObject(i).getJSONObject("mqtt");
+                    }
+                    if (jsonArray.getJSONObject(i).has("devices")) {
+                        bleJsonArr = jsonArray.getJSONObject(1).getJSONArray("devices");
+                    }
+                }
+            } catch (Exception e) {
+                Log.e("BLEtoMqttService", "Error parsing config: " + e.getMessage());
+                stopSelf();
+                return START_NOT_STICKY;
+            }
+
+            final String inputFinal = input;
+            // Start MQTT connection
+            MQTTHandler.getInstance(this, mqttJsonObj, new MqttConnectionListener() {
+                @Override
+                public void onConnectionSuccess() {
+                    createNotificationChannel();
+                    Intent notificationIntent = new Intent(BLEtoMqttService.this, MainActivity.class);
+                    PendingIntent pendingIntent = PendingIntent.getActivity(BLEtoMqttService.this,
+                            0, notificationIntent, PendingIntent.FLAG_MUTABLE);
+                    Notification notification = new NotificationCompat.Builder(BLEtoMqttService.this, CHANNEL_ID)
+                            .setContentTitle("BLEtoMqtt Bridge")
+                            .setContentText(inputFinal)
+                            .setSmallIcon(R.mipmap.ic_launcher)
+                            .setContentIntent(pendingIntent)
+                            .build();
+                    startForeground(1, notification);
+                    // Start BLE scanning only after MQTT connects
+                    BluetoothHandler.getInstance(BLEtoMqttService.this, bleJsonArr);
+                }
+                @Override
+                public void onConnectionFailure(Exception e) {
+                    android.os.Handler handler = new android.os.Handler(getMainLooper());
+                    handler.post(() -> android.widget.Toast.makeText(BLEtoMqttService.this, "MQTT connection failed: " + (e != null ? e.getMessage() : "Unknown error"), android.widget.Toast.LENGTH_LONG).show());
+                    stopSelf();
+                }
+            });
+            // Return sticky so Android keeps the service alive if killed after foreground is started
             return START_STICKY;
-        }
-        else {
+        } else {
+            // Handle stop/cleanup as before
             stopForeground(true);
-            stopSelf();
-            //        stopSelfResult(startId);
+            if (isCleaningUp) {
+                Log.i("BLEtoMqttService", "Cleanup already in progress, skipping");
+                stopSelf();
+                return START_NOT_STICKY;
+            }
+            Log.i("BLEtoMqttService", "Service stopping, cleaning up connections");
+            isCleaningUp = true;
+            try {
+                MQTTHandler.cleanup();
+                BluetoothHandler.cleanup();
+                Log.i("BLEtoMqttService", "Service cleanup initiated");
+                new android.os.Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.i("BLEtoMqttService", "Stopping service after cleanup delay");
+                        stopSelf();
+                    }
+                }, 2000);
+            } catch (Exception e) {
+                Log.e("BLEtoMqttService", "Error during service cleanup: " + e.getMessage());
+                stopSelf();
+            }
             return START_NOT_STICKY;
         }
-
     }
     @Override
     public void onDestroy() {
         super.onDestroy();
+        
+        // Prevent multiple cleanup calls
+        if (isCleaningUp) {
+            Log.i("BLEtoMqttService", "Cleanup already in progress, skipping");
+            return;
+        }
+        
+        // Cleanup BLE connections and MQTT when service is destroyed
+        Log.i("BLEtoMqttService", "Service being destroyed, cleaning up connections");
+        
+        isCleaningUp = true;
+        
+        try {
+            // Set lstart to false to prevent new operations
+            // lstart = false; // This line is removed as per the new_code
+            
+            // Cleanup MQTT connection
+            MQTTHandler.cleanup();
+            
+            // Cleanup BLE connections
+            BluetoothHandler.cleanup();
+            
+            Log.i("BLEtoMqttService", "Service cleanup completed");
+        } catch (Exception e) {
+            Log.e("BLEtoMqttService", "Error during service cleanup: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Final safety cleanup method - call this as a last resort
+     * This method forces cleanup even if normal cleanup failed
+     */
+    public static void forceCleanup() {
+        Log.w("BLEtoMqttService", "Force cleanup called - emergency cleanup in progress");
+        
+        try {
+            // Force cleanup BLE
+            if (BluetoothHandler.central != null) {
+                try {
+                    BluetoothHandler.central.close();
+                } catch (Exception e) {
+                    Log.e("BLEtoMqttService", "Error in force BLE cleanup: " + e.getMessage());
+                }
+                BluetoothHandler.central = null;
+            }
+            
+            // Force cleanup MQTT
+            if (MQTTHandler.v3Client != null) {
+                try {
+                    MQTTHandler.v3Client.close();
+                } catch (Exception e) {
+                    Log.e("BLEtoMqttService", "Error in force MQTT cleanup: " + e.getMessage());
+                }
+                MQTTHandler.v3Client = null;
+            }
+            
+            Log.i("BLEtoMqttService", "Force cleanup completed");
+        } catch (Exception e) {
+            Log.e("BLEtoMqttService", "Error in force cleanup: " + e.getMessage());
+        }
     }
     //    @Nullable
     @Override
@@ -378,28 +471,42 @@ public class BLEtoMqttService extends Service {
     }
 
     public void mqttPublish(String MACAddress , UUID ServiceUUID, UUID CharacteristicUUID ,byte[] value){
+        if (!MQTTHandler.isAvailable()) {
+            Log.w("BLEtoMqttService", "MQTT not available, skipping mqttPublish");
+            return;
+        }
+        
         String[] splitString = Raw2Friendly( MACAddress, ServiceUUID, CharacteristicUUID,value);
-        if (lstart) {
+        if (MQTTHandler.isAvailable()) {
             MQTTHandler.Publish(splitString[0], splitString[1], false);
         }
     };
 
     public void BLE_Publish(String topic , String message){
+        if (!MQTTHandler.isAvailable()) {
+            Log.w("BLEtoMqttService", "MQTT not available, skipping BLE_Publish");
+            return;
+        }
 
         String[] splitString = Friendly2Raw(topic,message);
-        if (lstart) {
+        if (MQTTHandler.isAvailable()) {
             BluetoothHandler.Publish(splitString[0], splitString[1], splitString[2], splitString[3]);
 
         }
     };
     public void mqttSubscribe(String MACAddress , UUID ServiceUUID, UUID CharacteristicUUID ){
+        if (!MQTTHandler.isAvailable()) {
+            Log.w("BLEtoMqttService", "MQTT not available, skipping mqttSubscribe");
+            return;
+        }
+        
         byte[] noValue={};
         String[] splitString = Raw2Friendly( MACAddress, ServiceUUID, CharacteristicUUID,noValue);
-        if (lstart) {
+        if (MQTTHandler.isAvailable()) {
             try {
                 MQTTHandler.Subscribe(splitString[0], 1);
             } catch (MqttException e) {
-
+                Log.e("BLEtoMqttService", "Error subscribing to MQTT topic: " + e.getMessage());
             }
         }
     };

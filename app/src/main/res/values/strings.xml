@@ -1,3 +1,42 @@
 <resources>
     <string name="app_name">BLEtoMQTT</string>
+    
+    <!-- Permission Helper UI -->
+    <string name="service_status">Service Status</string>
+    <string name="service_running">Running</string>
+    <string name="service_stopped">Stopped</string>
+    <string name="required_permissions">Required Permissions</string>
+    <string name="bluetooth_permissions">Bluetooth permissions</string>
+    <string name="location_permissions">Location permissions</string>
+    <string name="storage_permissions">Storage permissions</string>
+    <string name="notification_permissions">Notification permissions</string>
+    <string name="request_permissions">Request Permissions</string>
+    <string name="service_controls">Service Controls</string>
+    <string name="start_service">Start Service</string>
+    <string name="stop_service">Stop Service</string>
+    
+    <!-- Permission Messages -->
+    <string name="permissions_granted">All permissions granted!</string>
+    <string name="permissions_denied">Some permissions were denied</string>
+    <string name="permissions_already_granted">All permissions are already granted!</string>
+    <string name="grant_permissions_first">Please grant all required permissions first</string>
+    <string name="service_started">Service started</string>
+    <string name="service_stopped_message">Service stopped</string>
+    <string name="service_start_failed">Failed to start service</string>
+    <string name="service_stop_failed">Failed to stop service</string>
+    <string name="permissions_required">Permissions Required</string>
+    <string name="permissions_required_message">The following permissions are required:\n\nPlease grant these permissions in Settings.</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="cancel">Cancel</string>
+    
+    <!-- Permission Descriptions -->
+    <string name="permission_bluetooth_desc">Basic Bluetooth functionality</string>
+    <string name="permission_bluetooth_admin_desc">Bluetooth administration</string>
+    <string name="permission_bluetooth_scan_desc">Scan for Bluetooth devices</string>
+    <string name="permission_bluetooth_connect_desc">Connect to Bluetooth devices</string>
+    <string name="permission_location_fine_desc">Precise location for BLE scanning</string>
+    <string name="permission_location_coarse_desc">Approximate location for BLE scanning</string>
+    <string name="permission_storage_read_desc">Read files from storage</string>
+    <string name="permission_storage_write_desc">Write files to storage</string>
+    <string name="permission_notification_desc">Show notifications for the service</string>
 </resources>

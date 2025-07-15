@@ -9,9 +9,9 @@ android {
     defaultConfig {
         applicationId = "com.CasparvdBroek.bletomqtt"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 3
-        versionName = "1.02.02"
+        targetSdk = 29
+        versionCode = 4
+        versionName = "1.02.03"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -35,8 +35,24 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    lint {
+        baseline = file("lint-baseline.xml")
+    }
+    
+    // Enable app bundle for Play Store
+    bundle {
+        language {
+            enableSplit = false
+        }
+        density {
+            enableSplit = false
+        }
+        abi {
+            enableSplit = true
+        }
     }
 }
 

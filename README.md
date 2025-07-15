@@ -19,7 +19,7 @@ Clone repository and open in Android IDE. Build apk and install on your device.
 Using an Android file manager create a new directory in the user root called 'bletomqtt' (/mnt/sdcard/bletomqtt) in which to place the setup.json file.
 WARNING This is the phones internal SDCard (memory).
 
-Go in to Settings->App->BLEtoMQTT and grant location and file privileges
+Go in to Settings->App->BLEtoMQTT and grant location and file privileges, and also make sure bluetooth is enabled.
 
 Restart app and on user screen press 'service start' button - a permanent notification should be generated. If no notification is generated then refer to Problems section.
 

@@ -37,10 +37,13 @@ public class BluetoothHandler {
 
     public static BluetoothCentralManager central;
     private static BluetoothHandler instance = null;
+    private static boolean isCleaningUp = false;
     private BLEtoMqttService context;
     private final Handler handler = new Handler(Looper.getMainLooper());
     public List<String> MACAddressesList = new ArrayList<String>();
     public List<String> passKeyList = new ArrayList<String>();
+    // Track connected peripherals to ensure proper cleanup
+    private static List<BluetoothPeripheral> connectedPeripherals = new ArrayList<>();
 
     public static BluetoothHandler getInstance(BLEtoMqttService context, JSONArray bleJsonArr)  {   //Makes it a singleton class
         if (instance == null) {
@@ -73,6 +76,17 @@ public class BluetoothHandler {
         private static final String TAG = "BluetoothCentralManagerCallback";
         @Override
         public void onConnectedPeripheral(@NotNull BluetoothPeripheral peripheral) {
+            if (central == null || isCleaningUp) {
+                Log.w(TAG, "Central manager is null or cleaning up, skipping onConnectedPeripheral");
+                return;
+            }
+            
+            // Track connected peripheral for cleanup
+            if (!connectedPeripherals.contains(peripheral)) {
+                connectedPeripherals.add(peripheral);
+                Log.i(TAG, "Added peripheral to tracking list: " + peripheral.getName() + " (" + peripheral.getAddress() + ")");
+            }
+            
             int index;
             String passKey;
             index =MACAddressesList.indexOf(peripheral.getAddress());
@@ -89,19 +103,35 @@ public class BluetoothHandler {
         }
         @Override
         public void onConnectionFailed(@NotNull BluetoothPeripheral peripheral, final @NotNull HciStatus status) {
+            if (central == null || isCleaningUp) {
+                Log.w(TAG, "Central manager is null or cleaning up, skipping onConnectionFailed");
+                return;
+            }
+            
             central.startPairingPopupHack();    //Skipped if samsung device
             startScan(MACAddressesList.toArray(new String[0]));    //Scan for more devices
         }
 
         @Override
         public void onDisconnectedPeripheral(@NotNull final BluetoothPeripheral peripheral, final @NotNull HciStatus status) {
+            if (central == null || isCleaningUp) {
+                Log.w(TAG, "Central manager is null or cleaning up, skipping onDisconnectedPeripheral");
+                return;
+            }
 
+            // Remove from tracking list
+            connectedPeripherals.remove(peripheral);
+            Log.i(TAG, "Removed peripheral from tracking list: " + peripheral.getName() + " (" + peripheral.getAddress() + ")");
 
             // Reconnect to this device when it becomes available again
             Log.i(TAG,"onDisconnectedPeripheral - " +peripheral.getName() );
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
+                    if (central == null || isCleaningUp) {
+                        Log.w(TAG, "Central manager is null or cleaning up, skipping autoConnectPeripheral");
+                        return;
+                    }
                     //             central.stopScan();
                     //              peripheral.cancelConnection();
                     central.autoConnectPeripheral(peripheral, peripheralCallback);
@@ -114,6 +144,10 @@ public class BluetoothHandler {
 
         @Override
         public void onDiscoveredPeripheral(@NotNull BluetoothPeripheral peripheral, @NotNull ScanResult scanResult) {
+            if (central == null || isCleaningUp) {
+                Log.w(TAG, "Central manager is null or cleaning up, skipping onDiscoveredPeripheral");
+                return;
+            }
 
             central.stopScan(); //Connect whilst doing nothing else can get errors. Restart in connection callbacks
             central.connectPeripheral(peripheral, peripheralCallback);
@@ -122,6 +156,10 @@ public class BluetoothHandler {
 
         @Override
         public void onBluetoothAdapterStateChanged(int state) {
+            if (central == null || isCleaningUp) {
+                Log.w(TAG, "Central manager is null or cleaning up, skipping onBluetoothAdapterStateChanged");
+                return;
+            }
 
             if (state == BluetoothAdapter.STATE_ON) {
                 // Bluetooth is on now, start scanning again
@@ -131,8 +169,10 @@ public class BluetoothHandler {
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-
-
+                        if (isCleaningUp) {
+                            Log.w(TAG, "Cleaning up, skipping InitiateBLE");
+                            return;
+                        }
                         InitiateBLE();
 
                     }
@@ -152,6 +192,10 @@ public class BluetoothHandler {
         private  final String TAG = "BluetoothPeripheralCallback";
         @Override
         public void onServicesDiscovered(@NotNull BluetoothPeripheral peripheral) {
+            if (context == null || isCleaningUp) {
+                Log.w(TAG, "Context is null or cleaning up, skipping onServicesDiscovered");
+                return;
+            }
 
             byte[] noValue = {' '};
             String sName;
@@ -169,7 +213,9 @@ public class BluetoothHandler {
                     handler.post(new Runnable() {
                                      @Override
                                      public void run() {
+                                         if (context != null && !isCleaningUp) {
                                          context.mqttPublish(peripheral.getAddress(), i.getUuid(), j.getUuid(), noValue);
+                                         }
                                      }
                                  }
                     );
@@ -186,7 +232,9 @@ public class BluetoothHandler {
                         handler.post(new Runnable() {
                                          @Override
                                          public void run() {
+                                             if (context != null && !isCleaningUp) {
                                              context.mqttSubscribe(peripheral.getAddress(), i.getUuid(), j.getUuid());
+                                             }
                                          }
                                      }
                         );
@@ -215,7 +263,9 @@ public class BluetoothHandler {
             handler.post(new Runnable() {
                              @Override
                              public void run() {
+                                 if (context != null && !isCleaningUp) {
                                  context.mqttPublish(peripheral.getAddress(),characteristic.getService().getUuid(),characteristic.getUuid(),value);
+                                 }
                              }
                          }
             );
@@ -236,16 +286,136 @@ public class BluetoothHandler {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
+                if (central == null || isCleaningUp) {
+                    Log.w("BluetoothHandler", "Central manager is null or cleaning up, skipping scan");
+                    return;
+                }
                 central.scanForPeripheralsWithAddresses(MACAddresses);
             }
         }, 1000);
     }
     public static void Publish(String MACAddress, String ServiceUUID, String CharacteristicUUID, String message){
+        if (central == null || isCleaningUp) {
+            Log.w("BluetoothHandler", "Central manager is null or cleaning up, skipping Publish");
+            return;
+        }
 
         BluetoothPeripheral peripheral = central.getPeripheral(MACAddress);
-        if (peripheral.getState() == ConnectionState.CONNECTED) {
+        if (peripheral != null && peripheral.getState() == ConnectionState.CONNECTED) {
             peripheral.writeCharacteristic(UUID.fromString(ServiceUUID), UUID.fromString(CharacteristicUUID), message.getBytes(StandardCharsets.UTF_8), WriteType.WITH_RESPONSE);
-
         }
+        }
+    
+    /**
+     * Cleanup method to disconnect all BLE devices and close the central manager
+     * Call this when the service is stopping
+     */
+    public static void cleanup() {
+        if (isCleaningUp) {
+            Log.i("BluetoothHandler", "Cleanup already in progress, skipping");
+            return;
+        }
+        
+        if (central != null) {
+            isCleaningUp = true;
+            Log.i("BluetoothHandler", "Cleaning up BLE connections");
+            
+            // Use a handler to perform cleanup with delays
+            Handler cleanupHandler = new Handler(Looper.getMainLooper());
+            
+            cleanupHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    performCleanup();
+                }
+            });
+        } else {
+            Log.i("BluetoothHandler", "Central manager already null, cleanup skipped");
+        }
+    }
+    
+    /**
+     * Perform the actual cleanup with proper timing
+     */
+    private static void performCleanup() {
+        try {
+            // Stop scanning first
+            central.stopScan();
+            Log.i("BluetoothHandler", "Scanning stopped");
+        } catch (Exception e) {
+            Log.w("BluetoothHandler", "Error stopping scan: " + e.getMessage());
+        }
+        
+        // Delay before disconnecting peripherals to allow current operations to complete
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                disconnectPeripherals();
+            }
+        }, 500);
+    }
+    
+    /**
+     * Disconnect all peripherals with proper timing
+     */
+    private static void disconnectPeripherals() {
+        try {
+            // Use our tracked peripherals list
+            Log.i("BluetoothHandler", "Found " + connectedPeripherals.size() + " connected peripherals to cleanup");
+            
+            // Create a copy of the list to avoid concurrent modification
+            List<BluetoothPeripheral> peripheralsToDisconnect = new ArrayList<>(connectedPeripherals);
+            
+            for (BluetoothPeripheral peripheral : peripheralsToDisconnect) {
+                Log.i("BluetoothHandler", "Cleaning up peripheral: " + peripheral.getName() + " (" + peripheral.getAddress() + ")");
+                try {
+                    // Cancel connection
+                    central.cancelConnection(peripheral);
+                    Log.i("BluetoothHandler", "Successfully disconnected peripheral: " + peripheral.getName());
+                } catch (Exception e) {
+                    Log.w("BluetoothHandler", "Error disconnecting peripheral " + peripheral.getName() + ": " + e.getMessage());
+                }
+            }
+            
+            // Clear the tracking list
+            connectedPeripherals.clear();
+            
+        } catch (Exception e) {
+            Log.w("BluetoothHandler", "Error disconnecting peripherals: " + e.getMessage());
+        }
+        
+        // Delay before closing central manager to allow peripheral cleanup to complete
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                closeCentralManager();
+            }
+        }, 2000); // Increased delay to 2 seconds for better cleanup
+    }
+    
+    /**
+     * Close the central manager
+     */
+    private static void closeCentralManager() {
+        try {
+            // Close the central manager
+            central.close();
+            Log.i("BluetoothHandler", "Central manager closed successfully");
+        } catch (Exception e) {
+            Log.w("BluetoothHandler", "Error closing central manager: " + e.getMessage());
+        } finally {
+            // Always reset the singleton instance and central reference
+            central = null;
+            instance = null;
+            isCleaningUp = false;
+            Log.i("BluetoothHandler", "BLE cleanup completed");
+        }
+    }
+    
+    /**
+     * Get the singleton instance (for cleanup purposes)
+     */
+    public static BluetoothHandler getInstance() {
+        return instance;
     }
 }
