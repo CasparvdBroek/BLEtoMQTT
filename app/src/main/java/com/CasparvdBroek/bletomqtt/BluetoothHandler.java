@@ -35,6 +35,10 @@ import org.json.JSONObject;
 
 public class BluetoothHandler {
 
+    // === BLE Scan Power Optimization Constants ===
+    private static final long SCAN_DURATION_MS = 5000; // 5 seconds
+    private static final long SCAN_INTERVAL_MS = 30000; // 30 seconds
+
     public static BluetoothCentralManager central;
     private static BluetoothHandler instance = null;
     private static boolean isCleaningUp = false;
@@ -44,6 +48,12 @@ public class BluetoothHandler {
     public List<String> passKeyList = new ArrayList<String>();
     // Track connected peripherals to ensure proper cleanup
     private static List<BluetoothPeripheral> connectedPeripherals = new ArrayList<>();
+
+    // === Scan/Connection State Flags ===
+    private boolean isScanning = false;
+    private boolean isConnecting = false;
+    private Runnable scanTimeoutRunnable = null;
+    private Runnable scanIntervalRunnable = null;
 
     public static BluetoothHandler getInstance(BLEtoMqttService context, JSONArray bleJsonArr)  {   //Makes it a singleton class
         if (instance == null) {
@@ -94,12 +104,16 @@ public class BluetoothHandler {
             if(passKey != "") {
                 central.setPinCodeForPeripheral(peripheral.getAddress(), passKey);
             }
-            //Have connected so re enable scanning for more
+            // Stop scanning while connecting
+            stopScanImmediately();
+            isConnecting = false; // Connection is now established, allow scanning for more
             central.startPairingPopupHack();    //Skipped if samsung device
-            startScan(MACAddressesList.toArray(new String[0]));    //Scan for more devices
-
+            // Immediately start a new scan for more devices
+            startScan(MACAddressesList.toArray(new String[0]));
         }
         public void onConnectingPeripheral(@NotNull BluetoothPeripheral peripheral) {
+            // Set connecting flag
+            isConnecting = true;
         }
         @Override
         public void onConnectionFailed(@NotNull BluetoothPeripheral peripheral, final @NotNull HciStatus status) {
@@ -107,9 +121,9 @@ public class BluetoothHandler {
                 Log.w(TAG, "Central manager is null or cleaning up, skipping onConnectionFailed");
                 return;
             }
-            
-            central.startPairingPopupHack();    //Skipped if samsung device
-            startScan(MACAddressesList.toArray(new String[0]));    //Scan for more devices
+            isConnecting = false;
+            // After connection attempt, immediately start a new scan
+            onConnectionAttemptFinished();
         }
 
         @Override
@@ -125,18 +139,14 @@ public class BluetoothHandler {
 
             // Reconnect to this device when it becomes available again
             Log.i(TAG,"onDisconnectedPeripheral - " +peripheral.getName() );
-            handler.postDelayed(new Runnable() {
+            isConnecting = false;
+            // After connection attempt, immediately start a new scan
+            handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (central == null || isCleaningUp) {
-                        Log.w(TAG, "Central manager is null or cleaning up, skipping autoConnectPeripheral");
-                        return;
-                    }
-                    //             central.stopScan();
-                    //              peripheral.cancelConnection();
-                    central.autoConnectPeripheral(peripheral, peripheralCallback);
+                    onConnectionAttemptFinished();
                 }
-            }, 5000);
+            });
             //        central.startPairingPopupHack();    //Skipped if samsung device
             //       startScan(MACAddressesList.toArray(new String[0]));    //Scan for more devices
 
@@ -149,7 +159,9 @@ public class BluetoothHandler {
                 return;
             }
 
-            central.stopScan(); //Connect whilst doing nothing else can get errors. Restart in connection callbacks
+            // Stop scanning and connect
+            stopScanImmediately();
+            isConnecting = true;
             central.connectPeripheral(peripheral, peripheralCallback);
 
         }
@@ -282,17 +294,65 @@ public class BluetoothHandler {
         central.startPairingPopupHack();    //Skipped if samsung device
         startScan( MACAddressesList.toArray(new String[0]));
     }
+
     private void startScan(String[] MACAddresses) {
-        handler.postDelayed(new Runnable() {
+        if (isScanning || isConnecting || isCleaningUp) {
+            Log.i("BluetoothHandler", "Scan not started: already scanning, connecting, or cleaning up");
+            return;
+        }
+        isScanning = true;
+        Log.i("BluetoothHandler", "Starting BLE scan");
+        central.scanForPeripheralsWithAddresses(MACAddresses);
+        // Set up scan timeout
+        if (scanTimeoutRunnable != null) handler.removeCallbacks(scanTimeoutRunnable);
+        scanTimeoutRunnable = new Runnable() {
             @Override
             public void run() {
-                if (central == null || isCleaningUp) {
-                    Log.w("BluetoothHandler", "Central manager is null or cleaning up, skipping scan");
-                    return;
+                if (isScanning) {
+                    Log.i("BluetoothHandler", "Scan duration expired, stopping scan");
+                    stopScanAndScheduleNext();
                 }
-                central.scanForPeripheralsWithAddresses(MACAddresses);
             }
-        }, 1000);
+        };
+        handler.postDelayed(scanTimeoutRunnable, SCAN_DURATION_MS);
+    }
+
+    private void stopScanAndScheduleNext() {
+        if (!isScanning) return;
+        isScanning = false;
+        try {
+            central.stopScan();
+        } catch (Exception e) {
+            Log.w("BluetoothHandler", "Error stopping scan: " + e.getMessage());
+        }
+        // Schedule next scan after interval, but only if not connecting
+        if (!isConnecting) {
+            if (scanIntervalRunnable != null) handler.removeCallbacks(scanIntervalRunnable);
+            scanIntervalRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    startScan(MACAddressesList.toArray(new String[0]));
+                }
+            };
+            handler.postDelayed(scanIntervalRunnable, SCAN_INTERVAL_MS);
+        }
+    }
+
+    private void stopScanImmediately() {
+        if (!isScanning) return;
+        isScanning = false;
+        try {
+            central.stopScan();
+        } catch (Exception e) {
+            Log.w("BluetoothHandler", "Error stopping scan: " + e.getMessage());
+        }
+        if (scanTimeoutRunnable != null) handler.removeCallbacks(scanTimeoutRunnable);
+    }
+
+    private void onConnectionAttemptFinished() {
+        isConnecting = false;
+        // Immediately start a new scan (even if already connected to other devices)
+        startScan(MACAddressesList.toArray(new String[0]));
     }
     public static void Publish(String MACAddress, String ServiceUUID, String CharacteristicUUID, String message){
         if (central == null || isCleaningUp) {
